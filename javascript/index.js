@@ -33,32 +33,18 @@ Object.byString = function(o, s) {
     return o;
 };
 
-function createLyricObj(obj) {
-    const lyricSnippet = Object.byString(obj, 'highlights[0].value');
-    const lyricSong = Object.byString(obj, 'result.title_with_featured');
-    const lyricArtist = Object.byString(obj, 'result.primary_artist.name');
-    const artistIMG = Object.byString(obj, 'result.primary_artist.image_url');
-        
-    let lyricOutput = {
-        "image": `${artistIMG}`,
-        "lyrics": `${lyricSnippet}`,
-        "song": `${lyricSong}`,
-        "artist": `${lyricArtist}`,
-        "custom": false,
-        "favorited": false,
-            };
-    console.log('Lyric Output:', lyricOutput);
-    return lyricOutput;
-}
 
 /**  Node Getters **/
 const mainDiv = () => document.getElementById('main');
+const resultsDiv = () => document.getElementById('lyric-search-results');
 const homeLink = () => document.getElementById('home-link');
 const addCaptionLink = () => document.getElementById('add-caption-link');
 const searchLyricsLink = () => document.getElementById('search-lyrics-link');
 const myCaptionsLink = () => document.getElementById('my-captions-link');
 const lyricSearchButton = () => document.getElementById('lyric-search-button');
 const lyricSearchInput = () => document.getElementById('lyric-search-input');
+const searchResultsList = () => document.getElementById('search-results-list');
+const progressBar = () => document.getElementById('progress-bar');
 
 
 
@@ -82,9 +68,6 @@ const myCaptionsLinkHandler = () => {
 const searchButtonHandler = () => {
     lyricSearchButton().addEventListener('click', searchForLyrics);
 }
-
-
-
 
 
 /**  Event Handlers **/
@@ -134,16 +117,6 @@ const loadSearchLyrics = event => {
     `;
     
     form.appendChild(div1);
-
-    // <form>
-    //     <div class="input-field">
-    //         <input id="lyric-search-input" type="text">
-    //         <label for="lyric-search">Enter Song Lyrics</label>
-    //         <button class="btn waves-effect waves-light btn-large light-blue darken-2 right" type="submit" id='lyric-search-button'>Find Lyrics
-    //             <i class="material-icons right">search</i>
-    //         </button>
-    //     </div>  
-    // </form>
 
     mainDiv().appendChild(h1);
     mainDiv().appendChild(form);
@@ -198,25 +171,86 @@ const loadMyCaptions = event => {
     mainDiv().appendChild(captionList);
 }
 
+const loadSearchResults = () => {
+    const h4 = document.createElement('h4');
+    const ul = document.createElement('ul');
+    const progressDivParent = document.createElement('div');
+    const progressDIV = document.createElement('div');
+    
+    h4.innerText = 'Search Results';
+    ul.id = "search-results-list";
+
+    
+    progressDivParent.className = 'progress';
+    progressDIV.className = 'indeterminate';
+    ul.className = 'collection';
+    progressDivParent.id = 'progress-bar'
+
+    progressDivParent.appendChild(progressDIV);
+
+    resultsDiv().appendChild(h4);
+    resultsDiv().appendChild(progressDivParent);
+    resultsDiv().appendChild(ul);
+};
+
+function createResultCard (img, lyric, song, artist) {
+    // Variables for Inputs
+    let resultImg = img;
+    let resultLyric = lyric;
+    let resultSong = song;
+    let resultArtist = artist;
+    
+    //HTML for Result Card
+    const li = document.createElement('li');
+    li.className = 'collection-item avatar row';
+    li.innerHTML = `
+        <div class="container col s9">
+        <img src="${resultImg}" alt="" class="circle">
+        <span class="title" id="caption-list-lyric"><i>${resultLyric}</i></span>
+        <p>
+        <label for="caption-item-song">Song:</label>
+        <span id="caption-item-song">${resultSong}</span><br>
+        <label for="caption-item-artist">Arist:</label>
+        <span id="caption-item-artist">${resultArtist}</span>
+        </p>
+        </div>
+        <div class="container col s4">
+        <a class="waves-effect waves-light btn secondary-content green darken-1 right" id="save-lyric">Keep Caption<i class="material-icons left">lock_open</i></a>
+        </div>
+        `
+
+    searchResultsList().appendChild(li);
+};
+
 const searchForLyrics = event => {
     event.preventDefault();
-//Converts lyric search input (string) into Fetch URL 
+    //Resets Search Lyrics Results div
+    function verifyInput() {
+        if (lyricSearchInput().value == "" || lyricSearchInput().value == null) {
+            console.log("Search Error: Input field cannot be empty");
+            M.toast({html: 'Oops! No Lyrics. No Cap.'});
+        } else {
+            resetResultsDiv();
+            loadSearchResults();
+        }
+    };
     const lyricUrl = generateSearchURL(lyricSearchInput().value);
-    
-//Fetch: Searches Genius API for results
+    verifyInput();
+    //Fetch: Searches Genius API for results
     fetch(geniusURL + lyricUrl + '&per_page=5&page=1', {
 	"method": "GET",
 	"headers": {
 		"x-rapidapi-host": "genius-song-lyrics1.p.rapidapi.com",
 		"x-rapidapi-key": "85900b7c00mshcf991f3bb28992ep180ad5jsn97819322cdfa"
 	}
-})
-.then(resp => resp.json())
-.then(data => {
-    let lyricResults = data;
-    let hitResults = Object.byString(data, 'response.sections[2].hits');
+    })
+    .then(resp => resp.json())
+// Fetches data, formats data into an object, and consoles the results
+    .then(data => {
+        //let lyricResults = data;
+        let hitResults = Object.byString(data, 'response.sections[2].hits');
 
-    const mapThrough = hitResults.map(data => {
+        const returnedSearch = hitResults.map(data => {
         const lyricSnippet = Object.byString(data, 'highlights[0].value');
         const lyricSong = Object.byString(data, 'result.title_with_featured');
         const lyricArtist = Object.byString(data, 'result.primary_artist.name');
@@ -227,32 +261,18 @@ const searchForLyrics = event => {
             "lyrics": `${lyricSnippet}`,
             "song": `${lyricSong}`,
             "artist": `${lyricArtist}`,
-            "custom": false,
-            "favorited": false,
-        };
-        console.log('Lyrics Found:', lyricOutput);
+        }
+        console.log('Lyrics Found:', lyricOutput)
+        createResultCard (artistIMG, lyricSnippet, lyricSong, lyricArtist)
+        });
+        return returnedSearch
+        
     })
-
-    //const mapThrough = hitResults.map(createLyricObj(hitResults));
-})
-.catch(err => {
+    .then(() => hideProgressBar())
+    .catch(err => {
 	console.error(err);
-});
-
-    
-
-
-    //Get the text input from the lyric search field
-    //let lyricSearchInput = document.getElementById('lyric-search-input').value;
-    //console.log(lyricSearchInput);
-
-    //console.log(lyricUrl);
-    // fetch()
-    //     .then(resp => resp.json())
-    //     .then(data => {
-    //         console.log('data', data)
-    //         captions = data;
-    //     })
+    })
+    //.then(hideProgressBar());
 }
 
 /**  REQUESTS **/
@@ -264,17 +284,22 @@ const loadCaptions = () => {
         })
 }
 
-
-
 /**  MISC **/
 const resetMainDiv = () => {
     mainDiv().innerHTML = '';
 }
-
+const resetResultsDiv = () => {
+    resultsDiv().innerHTML = '';
+}
 const generateSearchURL = (string) => {
     let encoded = encodeURIComponent(string);
     return encoded;
 };
+
+const hideProgressBar = () => {
+    progressBar().style.display = "none";
+}
+
 
 
 /**  Start Up **/
@@ -289,3 +314,22 @@ document.addEventListener('DOMContentLoaded', function() {
     searchLyricsLinkHandler();
     myCaptionsLinkHandler();
 })
+
+/* <h4>Search Results</h4>
+        <ul class="collection">
+            <li class="collection-item avatar">
+              <img src="" alt="" class="circle">
+              <span class="title" id="caption-list-lyric"><i>This a rollie not a stop watch</i></span>
+              <p>
+                <label for="caption-item-song">Song:</label>
+                <span id="caption-item-song">Non-Stop</span><br>
+                <label for="caption-item-artist">Arist:</label>
+                <span id="caption-item-artist">Drake</span>
+              </p>
+              <a class="waves-effect waves-light btn secondary-content green darken-1 right" id="save-lyric">Keep Caption<i class="material-icons left">lock_open</i></a>
+            </li>
+        </ul>       */
+
+
+
+
