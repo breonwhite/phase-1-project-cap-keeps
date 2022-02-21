@@ -33,6 +33,18 @@ Object.byString = function(o, s) {
     return o;
 };
 
+const copyToClipboard = event => {
+    event.preventDefault();
+
+    const lyricsToCopyParent = event.target.closest('li');
+    const lyricsToCopy = lyricsToCopyParent.querySelector('#caption-list-lyric').innerText;
+
+    navigator.clipboard.writeText(lyricsToCopy);
+    
+    M.toast({html: '<i class="material-icons">content_paste</i>  Copied to Clipboard.'});
+    console.log('Lyrics copied to clipboard:', lyricsToCopy)
+};
+
 
 /**  Node Getters **/
 const mainDiv = () => document.getElementById('main');
@@ -48,6 +60,7 @@ const progressBar = () => document.getElementById('progress-bar');
 const saveLyrics = () => document.querySelectorAll('#save-lyric');
 const saveButton = () => document.querySelectorAll('#save-button');
 const unsaveButton = () => document.querySelectorAll('#unsave-button');
+const savedCaptionsList = () => document.querySelectorAll('#saved-lyric-item');
 
 
 /**  Event Listeners **/
@@ -73,6 +86,7 @@ const searchButtonHandler = () => {
 
 const saveButtonHandler = () => {
     saveLyrics().forEach(item => {
+        // Click Event Listener
         item.addEventListener('click', function (event) {
             const targetID = event.target.id;
             if (targetID === 'save-button') {
@@ -84,7 +98,50 @@ const saveButtonHandler = () => {
         });
     })
 }
-//saveLyrics;
+
+const captionsButtonsHandlers = () => {
+    savedCaptionsList().forEach(item => {
+        //Click Event Listener
+        item.addEventListener('click', function (event) {
+            const targetID = event.target.id;
+            if (targetID == 'favorite-caption') {
+                event.preventDefault();
+                console.log("This caption is facvorited!")
+            } else if (targetID == 'copy-caption') {
+                copyToClipboard(event);
+            } else if (targetID == 'delete-caption') {
+                event.preventDefault();
+                console.log("This caption would be deleted!")
+            }
+        })
+        //MouseOver EventListener
+        item.addEventListener('mouseover', function (event) {
+            const targetID = event.target.id;
+            if (targetID == 'favorite-caption') {
+                event.target.innerText = 'favorite';
+                event.target.className = 'material-icons red-text text-darken-2';
+            } else if (targetID == 'copy-caption') {
+                event.target.className = 'material-icons blue-text text-darken-2'
+            } else if (targetID == 'delete-caption') {
+                event.target.innerText = 'delete_forever';
+                event.target.className = 'material-icons black-text text-darken-2';
+            }
+        })
+        //MouseOut Event Listener
+        item.addEventListener('mouseout', function (event) {
+            const targetID = event.target.id;
+            if (targetID == 'favorite-caption') {
+                event.target.innerText = 'favorite_border';
+                event.target.className = 'material-icons';
+            } else if (targetID == 'copy-caption') {
+                event.target.className = 'material-icons';
+            } else if (targetID == 'delete-caption') {
+                event.target.innerText = 'delete';
+                event.target.className = 'material-icons';
+            }
+        })
+    })
+}
 
 
 
@@ -174,7 +231,8 @@ const loadMyCaptions = event => {
     // Create Caption Card
     captions.forEach(caption => {
         const captionCard = document.createElement('li');
-        captionCard.className = 'collection-item avatar saved-lyric-item';
+        captionCard.className = 'collection-item avatar row';
+        captionCard.id = 'saved-lyric-item';
 
          //Caption Variables
          let captionImage = caption.image;
@@ -183,6 +241,7 @@ const loadMyCaptions = event => {
          let captionArtist = caption.artist;
 
          captionCard.innerHTML = `
+         <div class="container col s9">
          <img src="${captionImage}" alt="" class="circle">
          <span class="title" id="caption-list-lyric"><i>${captionLyrics}</i></span>
                <p>
@@ -191,18 +250,22 @@ const loadMyCaptions = event => {
                  <label for="caption-item-artist">Arist:</label>
                  <span id="caption-item-artist">${captionArtist}</span>
                </p>
-               <a href="#" id="delete-lyric" class="secondary-content">
-                    <i class="material-icons">${favoriteIconText}</i>
-                    <i class="material-icons">content_copy</i>
-                    <i class="material-icons">delete</i>
-                 </a>
+        </div>
+        <div class="container col s3">
+                <a href="#" id="caption-list-buttons" class="secondary-content">
+                <i class="material-icons" id="favorite-caption">favorite_border</i>
+                <i class="material-icons" id="copy-caption">content_copy</i>
+                <i class="material-icons" id="delete-caption">delete</i>
+                </a>
+        </div>
                  `;
         
-        captionList.appendChild(captionCard);
+        captionList.appendChild(captionCard); 
     })
     
     mainDiv().appendChild(h1);
     mainDiv().appendChild(captionList);
+    captionsButtonsHandlers();
 };
 
 const loadSearchResults = () => {
