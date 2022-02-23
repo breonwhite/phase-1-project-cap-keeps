@@ -8,13 +8,13 @@
 
 
 
-
 /**  Global Variables **/
  const baseURL = 'http://localhost:3000';
  const geniusURL = 'https://genius-song-lyrics1.p.rapidapi.com/search/multi?q=';
  
  let captions = [];
  let lyricResults = [];
+
 
 
 /**Helper Functions */
@@ -34,15 +34,15 @@ Object.byString = function(o, s) {
 };
 
 const copyToClipboard = event => {
-    event.preventDefault();
-
-    const lyricsToCopyParent = event.target.closest('li');
+   //event.preventDefault();
+    
+   const lyricsToCopyParent = event.target.closest('li');
     const lyricsToCopy = lyricsToCopyParent.querySelector('#caption-list-lyric').innerText;
 
     navigator.clipboard.writeText(lyricsToCopy);
     
+    console.log('Lyrics copied to clipboard:', lyricsToCopy);
     M.toast({html: '<i class="material-icons">content_paste</i>  Copied to Clipboard.'});
-    console.log('Lyrics copied to clipboard:', lyricsToCopy)
 };
 
 
@@ -63,6 +63,14 @@ const saveButton = () => document.querySelectorAll('#save-button');
 const unsaveButton = () => document.querySelectorAll('#unsave-button');
 const savedCaptionsList = () => document.querySelectorAll('#saved-lyric-item');
 const switchToggle = () => document.querySelector('input[name=checkbox]');
+const customCaptionBtn = () => document.getElementById('custom-caption-submit-button');
+const customCaptionInput = () => document.getElementById('custom-caption-input');
+const customCaptionSong = () => document.getElementById('custom-caption-song');
+const customCaptionArtist = () => document.getElementById('custom-caption-artist');
+
+
+        
+        
 
 
 /**  Event Listeners **/
@@ -84,6 +92,10 @@ const myCaptionsLinkHandler = () => {
 
 const searchButtonHandler = () => {
     lyricSearchButton().addEventListener('click', searchForLyrics);
+}
+
+const customCaptionBtnHandler = () => {
+    customCaptionBtn().addEventListener('click', saveCustomCaption);
 }
 
 const saveButtonHandler = () => {
@@ -118,17 +130,18 @@ const captionsButtonsHandlers = () => {
             const targetID = event.target.id;
             if (targetID == 'favorite-caption') {
                 event.preventDefault();
-                console.log("This caption is favorited!")
                 favoriteCaption(event)
             } else if (targetID == 'unfavorite-caption') {
-                console.log("This caption was unfavorited!")
+                event.preventDefault();
                 unfavoriteCaption(event);
             } else if (targetID == 'copy-caption') {
+                event.preventDefault();
                 copyToClipboard(event);
             } else if (targetID == 'delete-caption') {
                 event.preventDefault();
                 deleteCaption(event);
                 removeParent(event);
+                M.toast({html: '<i class="material-icons">delete_sweep</i>Caption has been removed.'});
             }
         })
         //MouseOver EventListener
@@ -235,28 +248,28 @@ const loadCustomLyric = event => {
     const lyricsDiv = document.createElement('div');
         lyricsDiv.className = 'input-field col s12';
         lyricsDiv.innerHTML = `
-            <input id="custom-caption-input" type="text" class="validate">
+            <input id="custom-caption-input" type="text">
             <label for="custom-caption-input">Enter Custom Caption</label>
             `;
     
     const songDiv = document.createElement('div');
         songDiv.className = 'input-field col s6';
         songDiv.innerHTML = `
-            <input id="custom-caption-song" type="text" class="validate">
+            <input id="custom-caption-song" type="text">
             <label for="custom-caption-song">Song Title</label>
         `;
 
     const artistDiv = document.createElement('div');
         artistDiv.className = 'input-field col s6';
         artistDiv.innerHTML = `
-            <input id="custom-caption-artist" type="text" class="validate">
+            <input id="custom-caption-artist" type="text">
             <label for="custom-caption-artist">Artist</label>
         `
 
     const row3 = document.createElement('div');
         row3.className = 'row';
         row3.innerHTML = `
-        <button id="custom-caption-submit-button" class="btn-floating btn-large waves-effect waves-light red right"><i class="material-icons right">add</i></button>
+        <button id="custom-caption-submit-button" class="btn-floating btn-large waves-effect waves-light red right" type="submit"><i class="material-icons right">add</i></button>
     `;
 
     row1.appendChild(lyricsDiv);
@@ -271,6 +284,8 @@ const loadCustomLyric = event => {
 
     mainDiv().appendChild(h1)
     mainDiv().appendChild(headRow)
+
+    customCaptionBtnHandler();
 }
 
 const loadToggleDiv = event => {
@@ -321,6 +336,7 @@ const loadSearchLyrics = event => {
 
 const loadMyCaptions = event => {
     event.preventDefault();
+    resetToggleDiv();
      resetMainDiv();
      resetResultsDiv();
 
@@ -477,6 +493,63 @@ const captionToDB = event => {
     console.log(savedLyricObj);
 }
 
+const saveCustomCaption = event => {
+    event.preventDefault();
+    
+    console.log("Add Custom Caption was clicked!")
+
+    const thisCustomImg = "images/custom-star.png";
+    const thisCustomLyrics = customCaptionInput().value;
+    const thisCustomSong = customCaptionSong().value;
+    const thisCustomArtist = customCaptionArtist().value;
+    
+    if (thisCustomLyrics == null || thisCustomLyrics == "", thisCustomSong == null || thisCustomSong == "", thisCustomArtist == null || thisCustomArtist == "") {
+        console.log("Search Error: Input field cannot be empty");
+        M.toast({html: '<i class="material-icons">error</i> Oops! No Lyrics. No Cap.'});
+    } else {
+        
+        let customLyricObj = {
+            "image": thisCustomImg,
+            "lyrics": thisCustomLyrics,
+            "song": thisCustomSong,
+            "artist": thisCustomArtist,
+            "custom": true,
+            "favorited": false
+        };
+
+        fetch(baseURL + '/captions', {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(customLyricObj)
+        })
+            .then(resp => resp.json())
+            .then(data => {
+                captions.push(data)
+                M.toast({html: '<i class="material-icons">save</i>Caption kept!'})
+                console.log("Data was pushed!")
+                loadCaptions();
+                loadCustomLyric();
+
+            })
+
+        console.log(thisCustomLyrics);
+        console.log(thisCustomSong);
+        console.log(thisCustomArtist);
+        console.log(customLyricObj)
+    }
+    
+    
+    };
+
+    
+//     customCaptionInput = () => document.getElementById('custom-caption-input');
+// const customCaptionSong = () => document.getElementById('custom-caption-song');
+// const customCaptionArtist = () => document.getElementById('custom-caption-artist');
+
+
 const unsaveCaption = event => {
     event.preventDefault();
     
@@ -495,8 +568,8 @@ const searchForLyrics = event => {
     event.preventDefault();
     //Resets Search Lyrics Results div
     if (lyricSearchInput().value == "" || lyricSearchInput().value == null) {
-        console.log("Search Error: Input field cannot be empty");
-        M.toast({html: 'Oops! No Lyrics. No Cap.'});
+        console.log("Search Error: Input field cannot be empty")
+        M.toast({html: '<i class="material-icons">error</i> Oops! No Lyrics. No Cap.'});
     } else {
         resetResultsDiv();
         loadSearchResults();
@@ -549,11 +622,12 @@ const loadCaptions = () => {
         .then(data => {
             console.log('data', data)
             captions = data;
+            countCaptions(captions);
         })
 }
 
 const deleteCaption = event => {
-
+    event.preventDefault();
     const parentLI = event.target.closest('li');
     
     const getMatch = (caption) => {
@@ -563,14 +637,14 @@ const deleteCaption = event => {
         const thisImage = parentLI.querySelector('#caption-list-image').src;
         
         if (
-            caption.image === `${thisImage}` &&
-            caption.lyrics === `${thisLyrics}` && 
-            caption.song === `${thisSong}` &&
-            caption.artist === `${thisArtist}`
+            caption.lyrics == `${thisLyrics}` && 
+            caption.song == `${thisSong}` &&
+            caption.artist == `${thisArtist}`
             ) {
-            return caption.id
-        }
+            return caption;
+        };
     };
+
 
     const match = captions.find(getMatch).id;
     
@@ -614,7 +688,7 @@ const removeParent = event => {
 }
 
 const favoriteCaption = event => {
-    //event.preventDefault();
+    event.preventDefault();
     event.target.id = 'unfavorite-caption';
     event.target.className = 'material-icons red-text text-darken-2';
     event.target.innerText = `favorite`;
@@ -628,12 +702,11 @@ const favoriteCaption = event => {
         const thisImage = parentLI.querySelector('#caption-list-image').src;
         
         if (
-            caption.image === `${thisImage}` &&
             caption.lyrics === `${thisLyrics}` && 
             caption.song === `${thisSong}` &&
             caption.artist === `${thisArtist}`
             ) {
-            return caption.id
+            return caption;
         }
     };
 
@@ -671,12 +744,11 @@ const unfavoriteCaption = event => {
         const thisImage = parentLI.querySelector('#caption-list-image').src;
         
         if (
-            caption.image === `${thisImage}` &&
             caption.lyrics === `${thisLyrics}` && 
             caption.song === `${thisSong}` &&
             caption.artist === `${thisArtist}`
             ) {
-            return caption.id
+            return caption;
         }
     };
 
@@ -700,6 +772,13 @@ const unfavoriteCaption = event => {
 
 }
 
+const countCaptions = (array) => {
+    let captionsTotal = array.length;
+    const badge = document.getElementById('badge');
+
+    badge.innerText = captionsTotal;
+}
+
 
 
 /**  Start Up **/
@@ -708,26 +787,11 @@ document.addEventListener('DOMContentLoaded', function() {
     //What do we want it to do when th epage loads?
     //1. Load the homepage
     loadCaptions();
-    //loadHome();
+    loadHome();
     homeLinkHandler();
     addCaptionLinkHandler();
     myCaptionsLinkHandler();
 })
-
-/* <h4>Search Results</h4>
-        <ul class="collection">
-            <li class="collection-item avatar">
-              <img src="" alt="" class="circle">
-              <span class="title" id="caption-list-lyric"><i>This a rollie not a stop watch</i></span>
-              <p>
-                <label for="caption-item-song">Song:</label>
-                <span id="caption-item-song">Non-Stop</span><br>
-                <label for="caption-item-artist">Arist:</label>
-                <span id="caption-item-artist">Drake</span>
-              </p>
-              <a class="waves-effect waves-light btn secondary-content green darken-1 right" id="save-lyric">Keep Caption<i class="material-icons left">lock_open</i></a>
-            </li>
-        </ul>       */
 
 
 
