@@ -49,6 +49,7 @@ const copyToClipboard = event => {
 /**  Node Getters **/
 const mainDiv = () => document.getElementById('main');
 const resultsDiv = () => document.getElementById('lyric-search-results');
+const toggleDiv = () => document.getElementById('toggle-head');
 const homeLink = () => document.getElementById('home-link');
 const addCaptionLink = () => document.getElementById('add-caption-link');
 const searchLyricsLink = () => document.getElementById('search-lyrics-link');
@@ -61,6 +62,7 @@ const saveLyrics = () => document.querySelectorAll('#save-lyric');
 const saveButton = () => document.querySelectorAll('#save-button');
 const unsaveButton = () => document.querySelectorAll('#unsave-button');
 const savedCaptionsList = () => document.querySelectorAll('#saved-lyric-item');
+const switchToggle = () => document.querySelector('input[name=checkbox]');
 
 
 /**  Event Listeners **/
@@ -99,6 +101,16 @@ const saveButtonHandler = () => {
     })
 }
 
+const toggleHandler = event => {
+    switchToggle().addEventListener('change', function() {
+        if (this.checked) {
+            loadCustomLyric(event);
+            } else {
+            loadSearchLyrics(event);
+            }
+        })
+    }
+
 const captionsButtonsHandlers = () => {
     savedCaptionsList().forEach(item => {
         //Click Event Listener
@@ -106,12 +118,17 @@ const captionsButtonsHandlers = () => {
             const targetID = event.target.id;
             if (targetID == 'favorite-caption') {
                 event.preventDefault();
-                console.log("This caption is facvorited!")
+                console.log("This caption is favorited!")
+                favoriteCaption(event)
+            } else if (targetID == 'unfavorite-caption') {
+                console.log("This caption was unfavorited!")
+                unfavoriteCaption(event);
             } else if (targetID == 'copy-caption') {
                 copyToClipboard(event);
             } else if (targetID == 'delete-caption') {
                 event.preventDefault();
-                console.log("This caption would be deleted!")
+                deleteCaption(event);
+                removeParent(event);
             }
         })
         //MouseOver EventListener
@@ -120,6 +137,9 @@ const captionsButtonsHandlers = () => {
             if (targetID == 'favorite-caption') {
                 event.target.innerText = 'favorite';
                 event.target.className = 'material-icons red-text text-darken-2';
+            } else if (targetID == 'unfavorite-caption') {
+                event.target.innerText = 'favorite_border';
+                event.target.className = 'material-icons';
             } else if (targetID == 'copy-caption') {
                 event.target.className = 'material-icons blue-text text-darken-2'
             } else if (targetID == 'delete-caption') {
@@ -133,6 +153,9 @@ const captionsButtonsHandlers = () => {
             if (targetID == 'favorite-caption') {
                 event.target.innerText = 'favorite_border';
                 event.target.className = 'material-icons';
+            } else if (targetID == 'unfavorite-caption') {
+                event.target.innerText = 'favorite';
+                event.target.className = 'material-icons red-text text-darken-2';
             } else if (targetID == 'copy-caption') {
                 event.target.className = 'material-icons';
             } else if (targetID == 'delete-caption') {
@@ -162,6 +185,7 @@ const loadHome = event => {
     if(event) {
         event.preventDefault();
     }
+    resetToggleDiv();
     resetMainDiv();
     resetResultsDiv();
     const h1 = document.createElement('h1')
@@ -179,23 +203,105 @@ const loadHome = event => {
 
 const loadAddCaption = event => {
     event.preventDefault();
+    resetToggleDiv();
     resetMainDiv();
     resetResultsDiv();
+    loadToggleDiv(event);
+    //mainDiv().appendChild(h1);
+}
+
+const loadCustomLyric = event => {
+    //event.preventDefault();
+    resetMainDiv();
+    resetResultsDiv();
+
     const h1 = document.createElement('h1');
-    h1.innerText = 'Add Caption';
+        h1.innerText = `Add Caption`;
     
-    mainDiv().appendChild(h1);
+    const form = document.createElement('form');
+        form.className = 'col s12'
+   
+    const headRow = document.createElement('div');
+        headRow.className = 'row';
+    
+    const row1 = document.createElement('div');
+        row1.className = 'row';
+    
+    const row2 = document.createElement('div');
+        row2.className = 'row';
+
+    
+    
+    const lyricsDiv = document.createElement('div');
+        lyricsDiv.className = 'input-field col s12';
+        lyricsDiv.innerHTML = `
+            <input id="custom-caption-input" type="text" class="validate">
+            <label for="custom-caption-input">Enter Custom Caption</label>
+            `;
+    
+    const songDiv = document.createElement('div');
+        songDiv.className = 'input-field col s6';
+        songDiv.innerHTML = `
+            <input id="custom-caption-song" type="text" class="validate">
+            <label for="custom-caption-song">Song Title</label>
+        `;
+
+    const artistDiv = document.createElement('div');
+        artistDiv.className = 'input-field col s6';
+        artistDiv.innerHTML = `
+            <input id="custom-caption-artist" type="text" class="validate">
+            <label for="custom-caption-artist">Artist</label>
+        `
+
+    const row3 = document.createElement('div');
+        row3.className = 'row';
+        row3.innerHTML = `
+        <button id="custom-caption-submit-button" class="btn-floating btn-large waves-effect waves-light red right"><i class="material-icons right">add</i></button>
+    `;
+
+    row1.appendChild(lyricsDiv);
+    row2.appendChild(songDiv);
+    row2.appendChild(artistDiv);
+
+    form.appendChild(row1)
+    form.appendChild(row2);
+    form.appendChild(row3);
+
+    headRow.appendChild(form);
+
+    mainDiv().appendChild(h1)
+    mainDiv().appendChild(headRow)
+}
+
+const loadToggleDiv = event => {
+    const div = document.createElement('div');
+
+    div.className = 'switch right';
+
+    div.innerHTML = `
+        <br>
+        <label>
+        Search for Lyrics
+        <input type="checkbox" name="checkbox">
+        <span class="lever"></span>
+        Custom Caption
+        </label>
+    `
+    
+    toggleDiv().appendChild(div);
+    loadSearchLyrics(event);
+    toggleHandler();
 }
 
 const loadSearchLyrics = event => {
-    event.preventDefault();
+    //event.preventDefault();
     resetMainDiv();
     resetResultsDiv();
     const h1 = document.createElement('h1');
     const form = document.createElement('form');
     const div1 = document.createElement('div');
     
-    h1.innerText = 'Search by Lyrics';
+    h1.innerText = 'Search Lyrics';
     div1.className = 'input-field';
 
     div1.innerHTML = `
@@ -207,10 +313,10 @@ const loadSearchLyrics = event => {
     `;
     
     form.appendChild(div1);
-
     mainDiv().appendChild(h1);
-    mainDiv().appendChild(form);
-    searchButtonHandler()
+    mainDiv().appendChild(form)
+    searchButtonHandler();
+
 }
 
 const loadMyCaptions = event => {
@@ -226,7 +332,6 @@ const loadMyCaptions = event => {
      captionList.className = 'collection';
     
     //Icons
-    let favoriteIconText = 'favorite_border';
 
     // Create Caption Card
     captions.forEach(caption => {
@@ -239,10 +344,25 @@ const loadMyCaptions = event => {
          let captionLyrics = caption.lyrics;
          let captionSong = caption.song;
          let captionArtist = caption.artist;
+         let captionFavorited = caption.favorited;
+         let favoriteText = `favorite`;
+         let favoriteID = `favorite-caption`;
+         let favoriteClass = `material-icons`;
+
+         if (captionFavorited === true) {
+            favoriteText = 'favorite';
+            favoriteID = 'unfavorite-caption';
+            favoriteClass = 'material-icons red-text text-darken-2';
+         } else if (captionFavorited === false) {
+            favoriteText = 'favorite_border';
+            favoriteID = 'favorite-caption';
+            favoriteClass ='material-icons';
+         }
+        
 
          captionCard.innerHTML = `
          <div class="container col s9">
-         <img src="${captionImage}" alt="" class="circle">
+         <img src="${captionImage}" id="caption-list-image" alt="" class="circle">
          <span class="title" id="caption-list-lyric"><i>${captionLyrics}</i></span>
                <p>
                  <label for="caption-item-song">Song:</label>
@@ -253,14 +373,14 @@ const loadMyCaptions = event => {
         </div>
         <div class="container col s3">
                 <a href="#" id="caption-list-buttons" class="secondary-content">
-                <i class="material-icons" id="favorite-caption">favorite_border</i>
+                <i class="${favoriteClass}" id="${favoriteID}">${favoriteText}</i>
                 <i class="material-icons" id="copy-caption">content_copy</i>
                 <i class="material-icons" id="delete-caption">delete</i>
                 </a>
         </div>
                  `;
         
-        captionList.appendChild(captionCard); 
+        captionList.appendChild(captionCard);
     })
     
     mainDiv().appendChild(h1);
@@ -365,6 +485,10 @@ const unsaveCaption = event => {
     event.target.innerHTML = `
     Keeper<i class="material-icons left">lock_open</i>
     `;
+
+    deleteCaption(event)
+    console.log("Caption was removed from database")
+
 }
 
 const searchForLyrics = event => {
@@ -428,12 +552,52 @@ const loadCaptions = () => {
         })
 }
 
+const deleteCaption = event => {
+
+    const parentLI = event.target.closest('li');
+    
+    const getMatch = (caption) => {
+        const thisLyrics = parentLI.querySelector('#caption-list-lyric').innerText;
+        const thisSong = parentLI.querySelector('#caption-item-song').innerText;
+        const thisArtist = parentLI.querySelector('#caption-item-artist').innerText;
+        const thisImage = parentLI.querySelector('#caption-list-image').src;
+        
+        if (
+            caption.image === `${thisImage}` &&
+            caption.lyrics === `${thisLyrics}` && 
+            caption.song === `${thisSong}` &&
+            caption.artist === `${thisArtist}`
+            ) {
+            return caption.id
+        }
+    };
+
+    const match = captions.find(getMatch).id;
+    
+    fetch(baseURL + `/captions` + `/${match}`, {
+        method: "DELETE",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        }
+      })
+        .then(resp => resp.json())
+        .then(data => {
+            loadCaptions();
+        })
+
+}
+
+
 /**  MISC **/
 const resetMainDiv = () => {
     mainDiv().innerHTML = '';
 }
 const resetResultsDiv = () => {
     resultsDiv().innerHTML = '';
+}
+const resetToggleDiv = () => {
+    toggleDiv().innerHTML = '';
 }
 const generateSearchURL = (string) => {
     let encoded = encodeURIComponent(string);
@@ -444,6 +608,98 @@ const hideProgressBar = () => {
     progressBar().style.display = "none";
 }
 
+const removeParent = event => {
+    const parentItem = event.target.closest('li');
+    parentItem.remove();
+}
+
+const favoriteCaption = event => {
+    //event.preventDefault();
+    event.target.id = 'unfavorite-caption';
+    event.target.className = 'material-icons red-text text-darken-2';
+    event.target.innerText = `favorite`;
+
+    const parentLI = event.target.closest('li');
+    
+    const getMatch = (caption) => {
+        const thisLyrics = parentLI.querySelector('#caption-list-lyric').innerText;
+        const thisSong = parentLI.querySelector('#caption-item-song').innerText;
+        const thisArtist = parentLI.querySelector('#caption-item-artist').innerText;
+        const thisImage = parentLI.querySelector('#caption-list-image').src;
+        
+        if (
+            caption.image === `${thisImage}` &&
+            caption.lyrics === `${thisLyrics}` && 
+            caption.song === `${thisSong}` &&
+            caption.artist === `${thisArtist}`
+            ) {
+            return caption.id
+        }
+    };
+
+    const match = captions.find(getMatch).id;
+    
+    fetch(baseURL + `/captions` + `/${match}`, {
+        method: "PATCH",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            favorited: true,
+        }),
+      })
+        .then(resp => resp.json())
+        .then(data => {
+            loadCaptions();
+        })
+
+
+}
+
+const unfavoriteCaption = event => {
+    event.target.id = 'favorite-caption';
+    event.target.className = 'material-icons';
+    event.target.innerText = `favorite_border`;
+
+    const parentLI = event.target.closest('li');
+    
+    const getMatch = (caption) => {
+        const thisLyrics = parentLI.querySelector('#caption-list-lyric').innerText;
+        const thisSong = parentLI.querySelector('#caption-item-song').innerText;
+        const thisArtist = parentLI.querySelector('#caption-item-artist').innerText;
+        const thisImage = parentLI.querySelector('#caption-list-image').src;
+        
+        if (
+            caption.image === `${thisImage}` &&
+            caption.lyrics === `${thisLyrics}` && 
+            caption.song === `${thisSong}` &&
+            caption.artist === `${thisArtist}`
+            ) {
+            return caption.id
+        }
+    };
+
+    const match = captions.find(getMatch).id;
+    
+    fetch(baseURL + `/captions` + `/${match}`, {
+        method: "PATCH",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            favorited: false,
+        }),
+      })
+        .then(resp => resp.json())
+        .then(data => {
+            loadCaptions();
+        })
+
+
+}
+
 
 
 /**  Start Up **/
@@ -452,10 +708,9 @@ document.addEventListener('DOMContentLoaded', function() {
     //What do we want it to do when th epage loads?
     //1. Load the homepage
     loadCaptions();
-    loadHome();
+    //loadHome();
     homeLinkHandler();
     addCaptionLinkHandler();
-    searchLyricsLinkHandler();
     myCaptionsLinkHandler();
 })
 
