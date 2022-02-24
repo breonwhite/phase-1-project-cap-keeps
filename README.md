@@ -11,6 +11,8 @@ Easily create, find, and save photo captions in minutes. No cap.
 
 CAP KEEPS is a digital caption keeper tool that provides music and social media enthusiast with a platform to save captions for future posts. The tool allows users to store captions using song lyrics that can be found using a public API __OR__ entered in manually to create custom captions of your own.
 
+![Alt text](images/capkeeps.gif)
+
 ---
 ### __FEATURES__
 
