@@ -1,13 +1,3 @@
-/*  Three Question Rule:
-  Overview: Click the home link and make the home page appear
-
-    1. When? DOMCOntent Loaded When we click on my captions link, we should see all captions from the database 
-    2. Cause? DomContentLoaded
-    3. Effect? Fetch all of the saved captions
- */
-
-
-
 /**  Global Variables **/
  const baseURL = 'http://localhost:3000';
  const geniusURL = 'https://genius-song-lyrics1.p.rapidapi.com/search/multi?q=';
@@ -41,7 +31,6 @@ const copyToClipboard = event => {
 
     navigator.clipboard.writeText(lyricsToCopy);
     
-    console.log('Lyrics copied to clipboard:', lyricsToCopy);
     M.toast({html: '<i class="material-icons">content_paste</i>  Copied to Clipboard.'});
 };
 
@@ -106,7 +95,6 @@ const saveButtonHandler = () => {
             if (targetID === 'save-button') {
                 captionToDB(event)
         } else if (targetID == 'unsave-button') {
-            console.log("This caption needs to be deleted!")
                 unsaveCaption(event)
         }
         });
@@ -484,19 +472,13 @@ const captionToDB = event => {
         .then(resp => resp.json())
         .then(data => {
             captions.push(data)
-            console.log("Data was pushed!")
             loadCaptions();
             changeButton(event);
         })
-    
-    console.log("Button has been clicked");
-    console.log(savedLyricObj);
 }
 
 const saveCustomCaption = event => {
     event.preventDefault();
-    
-    console.log("Add Custom Caption was clicked!")
 
     const thisCustomImg = "images/custom-star.png";
     const thisCustomLyrics = customCaptionInput().value;
@@ -529,26 +511,14 @@ const saveCustomCaption = event => {
             .then(data => {
                 captions.push(data)
                 M.toast({html: '<i class="material-icons">save</i>Caption kept!'})
-                console.log("Data was pushed!")
                 loadCaptions();
                 loadCustomLyric();
 
             })
-
-        console.log(thisCustomLyrics);
-        console.log(thisCustomSong);
-        console.log(thisCustomArtist);
-        console.log(customLyricObj)
     }
     
     
     };
-
-    
-//     customCaptionInput = () => document.getElementById('custom-caption-input');
-// const customCaptionSong = () => document.getElementById('custom-caption-song');
-// const customCaptionArtist = () => document.getElementById('custom-caption-artist');
-
 
 const unsaveCaption = event => {
     event.preventDefault();
@@ -560,7 +530,6 @@ const unsaveCaption = event => {
     `;
 
     deleteCaption(event)
-    console.log("Caption was removed from database")
 
 }
 
